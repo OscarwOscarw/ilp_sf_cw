@@ -1,0 +1,47 @@
+[
+  {
+    "id": 101,
+    "date": "2025-11-10",
+    "time": "09:00",
+    "requirements": {
+      "capacity": 1.5,
+      "cooling": true,
+      "heating": false,
+      "maxCost": 35.0
+    },
+    "delivery": {
+      "lng": -3.1900,
+      "lat": 55.9450
+    }
+  },
+  {
+    "id": 102,
+    "date": "2025-11-10",
+    "time": "10:00",
+    "requirements": {
+      "capacity": 2.0,
+      "cooling": true,
+      "heating": false,
+      "maxCost": 40.0
+    },
+    "delivery": {
+      "lng": -3.1850,
+      "lat": 55.9430
+    }
+  },
+  {
+    "id": 103,
+    "date": "2025-11-10",
+    "time": "11:00",
+    "requirements": {
+      "capacity": 1.0,
+      "cooling": false,
+      "heating": true,
+      "maxCost": 25.0
+    },
+    "delivery": {
+      "lng": -3.1950,
+      "lat": 55.9470
+    }
+  }
+]

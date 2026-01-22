@@ -1,0 +1,44 @@
+[
+  {
+    "id": 6001,
+    "date": "2025-11-10",
+    "time": "09:00",
+    "requirements": {
+      "capacity": 4,
+      "cooling": true,
+      "heating": false
+    },
+    "delivery": {
+      "lng": -3.190,
+      "lat": 55.946
+    }
+  },
+  {
+    "id": 6002,
+    "date": "2025-11-10",
+    "time": "09:30",
+    "requirements": {
+      "capacity": 4,
+      "cooling": true,
+      "heating": false
+    },
+    "delivery": {
+      "lng": -3.180,
+      "lat": 55.942
+    }
+  },
+  {
+    "id": 6003,
+    "date": "2025-11-10",
+    "time": "10:00",
+    "requirements": {
+      "capacity": 2,
+      "cooling": false,
+      "heating": true
+    },
+    "delivery": {
+      "lng": -3.175,
+      "lat": 55.940
+    }
+  }
+]

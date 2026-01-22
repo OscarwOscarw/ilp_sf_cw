@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Delivery Simulation System</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css" />
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .task-status, .status-badge, [class*="status"] {
+            display: none !important;
+        }
+        #clear-all-areas {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-drone me-2"></i>Drone Delivery Simulation System
+        </a>
+        <div class="navbar-nav ms-auto">
+            <div class="nav-item">
+                <span class="navbar-text" id="connection-status">
+                    <i class="fas fa-circle text-success"></i> Connected
+                </span>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="left-panel">
+        <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="control-tab" data-bs-toggle="tab" data-bs-target="#control" type="button">
+                    <i class="fas fa-cogs me-1"></i>Control Center
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tasks-tab" data-bs-toggle="tab" data-bs-target="#tasks" type="button">
+                    <i class="fas fa-tasks me-1"></i>Task Management
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="emergency-tab" data-bs-toggle="tab" data-bs-target="#emergency" type="button">
+                    <i class="fas fa-bolt me-1"></i>Emergency Tasks
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="restricted-areas-tab" data-bs-toggle="tab" data-bs-target="#restricted-areas" type="button">
+                    <i class="fas fa-ban me-1"></i>Restricted Areas
+                </button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="control" role="tabpanel">
+                <div class="control-buttons">
+                    <button id="load-predefined-tasks" class="btn btn-outline-primary btn-action">
+                        <i class="fas fa-download me-1"></i> Load Built-in Tasks
+                    </button>
+                    <button id="start-simulation" class="btn btn-success btn-action">
+                        <i class="fas fa-play me-1"></i> Start Simulation
+                    </button>
+                    <button id="stop-simulation" class="btn btn-danger btn-action" disabled>
+                        <i class="fas fa-stop me-1"></i> Stop Simulation
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Simulation Status</span>
+                        <span id="simulation-status" class="badge bg-secondary">Not Running</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <h5 id="active-drones-count">0</h5>
+                                <small class="text-muted">Active Drones</small>
+                            </div>
+                            <div class="col-4">
+                                <h5 id="completed-tasks-count">0</h5>
+                                <small class="text-muted">Completed Tasks</small>
+                            </div>
+                            <div class="col-4">
+                                <h5 id="emergency-tasks-count">0</h5>
+                                <small class="text-muted">Emergency Tasks</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Quick Actions</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button id="send-emergency" class="btn btn-danger">
+                                <i class="fas fa-bolt me-1"></i> Send Emergency Task
+                            </button>
+                            <button id="refresh-status" class="btn btn-outline-primary">
+                                <i class="fas fa-sync-alt me-1"></i> Refresh Status
+                            </button>
+                            <button id="clear-all-tasks" class="btn btn-outline-warning">
+                                <i class="fas fa-trash me-1"></i> Clear All Tasks
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Path Control</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button id="show-all-paths" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-route me-1"></i> Show All Paths
+                            </button>
+                            <button id="hide-all-paths" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-eye-slash me-1"></i> Hide All Paths
+                            </button>
+                            <button id="clear-all-paths" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-eraser me-1"></i> Clear All Paths
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="tasks" role="tabpanel">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Task List</span>
+                        <span class="badge bg-primary" id="task-count">0 Tasks</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="task-list" id="task-list-container">
+                            <p class="text-muted p-3">No tasks available</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Import Normal Tasks via JSON</div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label small">Task JSON Data</label>
+                            <textarea class="form-control form-control-sm json-task-input" id="normal-tasks-json" placeholder='Enter normal task JSON data&#10;Example:&#10;[&#10;  {&#10;    "id": 1001,&#10;    "date": "2025-11-13",&#10;    "time": "09:30",&#10;    "delivery": {&#10;      "lng": -3.188,&#10;      "lat": 55.946&#10;    },&#10;    "requirements": {&#10;      "capacity": 3.5,&#10;      "cooling": true,&#10;      "heating": false,&#10;      "maxCost": 25.0&#10;    }&#10;  }&#10;]'></textarea>
+                        </div>
+                        <button id="import-normal-tasks" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-file-import me-1"></i> Import Normal Tasks
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Create Single Normal Task</div>
+                    <div class="card-body">
+                        <form id="normal-task-form">
+                            <div class="mb-2">
+                                <label class="form-label small">Task ID</label>
+                                <input type="number" class="form-control form-control-sm" id="normal-task-id" value="1007">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Capacity Requirement</label>
+                                <input type="number" class="form-control form-control-sm" id="normal-task-capacity" value="4.5" step="0.1">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Delivery Location</label>
+                                <input type="text" class="form-control form-control-sm" id="normal-task-location" value="-3.185, 55.948">
+                                <div class="form-text small">Format: Longitude,Latitude</div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-plus me-1"></i> Add Normal Task
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="emergency" role="tabpanel">
+                <div class="card emergency-tasks-panel">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Emergency Task List</span>
+                        <span class="badge bg-danger" id="emergency-task-count">0 Emergency Tasks</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="task-list" id="emergency-task-list-container">
+                            <p class="text-muted p-3">No emergency tasks available</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Import Emergency Tasks via JSON</div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label small">Emergency Task JSON Data</label>
+                            <textarea class="form-control form-control-sm json-task-input" id="emergency-tasks-json" placeholder='Enter emergency task JSON data&#10;Example:&#10;{&#10;  "emergencyTasks": [&#10;    {&#10;      "id": 1001,&#10;      "emergencyLevel": 1,&#10;      "requirements": {&#10;        "capacity": 5,&#10;        "maxCost": 200&#10;      },&#10;      "delivery": {&#10;        "lng": -3.187,&#10;        "lat": 55.944&#10;      }&#10;    }&#10;  ]&#10;}'></textarea>
+                        </div>
+                        <button id="import-emergency-tasks" class="btn btn-danger btn-sm w-100">
+                            <i class="fas fa-file-import me-1"></i> Import & Send Emergency Tasks
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Create Single Emergency Task</div>
+                    <div class="card-body">
+                        <form id="emergency-task-form">
+                            <div class="mb-2">
+                                <label class="form-label small">Task ID</label>
+                                <input type="number" class="form-control form-control-sm" id="emergency-task-id" value="2001">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Emergency Level</label>
+                                <select class="form-control form-control-sm" id="emergency-level">
+                                    <option value="1">Level 1 - Low</option>
+                                    <option value="2">Level 2 - Medium Low</option>
+                                    <option value="3" selected>Level 3 - Medium</option>
+                                    <option value="4">Level 4 - High</option>
+                                    <option value="5">Level 5 - Critical</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Capacity Requirement</label>
+                                <input type="number" class="form-control form-control-sm" id="emergency-capacity" value="5" step="0.1">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">Delivery Location</label>
+                                <input type="text" class="form-control form-control-sm" id="emergency-location" value="-3.19, 55.95">
+                                <div class="form-text small">Format: Longitude,Latitude</div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-bolt me-1"></i> Add & Send Emergency Task
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="restricted-areas" role="tabpanel">
+                <div class="card">
+                    <div class="card-header">Restricted Areas Control</div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button id="start-drawing-area" class="btn btn-outline-danger btn-sm">
+                                <i class="fas fa-draw-polygon me-1"></i> Draw New Restricted Area
+                            </button>
+                            <!-- 禁飞区删除按钮被CSS隐藏 -->
+                            <button id="clear-all-areas" class="btn btn-outline-warning btn-sm" style="display: none;">
+                                <i class="fas fa-trash me-1"></i> Clear All Restricted Areas
+                            </button>
+                            <button id="load-backend-areas" class="btn btn-outline-info btn-sm">
+                                <i class="fas fa-sync me-1"></i> Load Restricted Areas from Backend
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>Restricted Areas List</span>
+                        <span class="badge bg-danger" id="restricted-area-count">0 Areas</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="task-list" id="restricted-areas-list">
+                            <p class="text-muted p-3">No restricted areas available</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Restricted Area Information</div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label small">Restricted Area Name</label>
+                            <input type="text" class="form-control form-control-sm" id="area-name" placeholder="Enter restricted area name">
+                        </div>
+                        <button id="save-current-area" class="btn btn-danger btn-sm w-100" disabled>
+                            <i class="fas fa-save me-1"></i> Save Current Restricted Area
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Create Restricted Area from Coordinates</div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label small">Restricted Area Name</label>
+                            <input type="text" class="form-control form-control-sm" id="area-name-coords" placeholder="Enter restricted area name">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Coordinate List</label>
+                            <textarea class="form-control form-control-sm coordinates-input" id="area-coordinates" placeholder="Enter coordinates, one per line, format: Longitude,Latitude&#10;Example:&#10;-3.19,55.95&#10;-3.18,55.94&#10;-3.17,55.95"></textarea>
+                            <div class="form-text small">One coordinate per line, format: Longitude,Latitude</div>
+                        </div>
+                        <button id="create-area-from-coords" class="btn btn-danger btn-sm w-100">
+                            <i class="fas fa-plus me-1"></i> Create Restricted Area from Coordinates
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">Create Restricted Area from JSON</div>
+                    <div class="card-body">
+                        <div class="mb-2">
+                            <label class="form-label small">JSON Data</label>
+                            <textarea class="form-control form-control-sm json-input-area" id="area-json" placeholder='Enter restricted area JSON data&#10;Example:&#10;{&#10;  "name": "Test Restricted Area",&#10;  "vertices": [&#10;    {"lng": -3.19, "lat": 55.95},&#10;    {"lng": -3.18, "lat": 55.94},&#10;    {"lng": -3.17, "lat": 55.95}&#10;  ]&#10;}'></textarea>
+                        </div>
+                        <button id="create-area-from-json" class="btn btn-danger btn-sm w-100">
+                            <i class="fas fa-code me-1"></i> Create Restricted Area from JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="map-container">
+        <div id="map"></div>
+        <div class="path-controls">
+            <div class="btn-group-vertical">
+                <button id="toggle-paths" class="btn btn-sm btn-outline-info">
+                    <i class="fas fa-route"></i> Paths
+                </button>
+                <button id="toggle-task-markers" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-map-marker-alt"></i> Tasks
+                </button>
+                <button id="toggle-restricted-areas" class="btn btn-sm btn-outline-danger">
+                    <i class="fas fa-ban"></i> Restricted Areas
+                </button>
+            </div>
+        </div>
+        <div class="status-bar">
+            <div class="drone-status-grid" id="drones-status-list">
+                <div class="text-muted">No drone status information available</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert-area"></div>
+
+<!-- Emergency Order Bypass Restricted Area Confirmation Dialog -->
+<div class="modal fade bypass-confirmation-modal" id="bypassConfirmationModal" tabindex="-1" aria-labelledby="bypassConfirmationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="bypassConfirmationModalLabel">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Restricted Area Blocking Warning
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="warning-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <h5 class="mb-3">Emergency Task Blocked by Restricted Area</h5>
+                <p class="mb-3">Emergency task <strong id="blocked-task-id">#</strong> delivery path is blocked by the following restricted area:</p>
+                <div class="restricted-area-name" id="blocked-area-name">Restricted Area Name</div>
+                <p class="mb-3">Allow drone to fly over restricted area to complete emergency task?</p>
+                <div class="alert alert-warning small" role="alert">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Note: Flying over restricted areas may violate regulations. Please confirm you have proper authorization.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">Cancel Task</button>
+                <button type="button" class="btn btn-confirm" id="confirmBypass">Confirm Bypass</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

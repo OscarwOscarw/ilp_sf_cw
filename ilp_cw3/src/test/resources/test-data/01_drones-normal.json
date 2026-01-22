@@ -1,0 +1,132 @@
+[
+  {
+    "name": "Drone 1",
+    "id": "1",
+    "capability": {
+      "cooling": true,
+      "heating": true,
+      "capacity": 4.0,
+      "maxMoves": 2000,
+      "costPerMove": 0.01,
+      "costInitial": 4.3,
+      "costFinal": 6.5
+    }
+  },
+  {
+    "name": "Drone 2",
+    "id": "2",
+    "capability": {
+      "cooling": false,
+      "heating": true,
+      "capacity": 8.0,
+      "maxMoves": 1000,
+      "costPerMove": 0.03,
+      "costInitial": 2.6,
+      "costFinal": 5.4
+    }
+  },
+  {
+    "name": "Drone 3",
+    "id": "3",
+    "capability": {
+      "cooling": false,
+      "heating": false,
+      "capacity": 20.0,
+      "maxMoves": 4000,
+      "costPerMove": 0.05,
+      "costInitial": 9.5,
+      "costFinal": 11.5
+    }
+  },
+  {
+    "name": "Drone 4",
+    "id": "4",
+    "capability": {
+      "cooling": false,
+      "heating": true,
+      "capacity": 8.0,
+      "maxMoves": 1000,
+      "costPerMove": 0.02,
+      "costInitial": 1.4,
+      "costFinal": 2.5
+    }
+  },
+  {
+    "name": "Drone 5",
+    "id": "5",
+    "capability": {
+      "cooling": true,
+      "heating": true,
+      "capacity": 12.0,
+      "maxMoves": 1500,
+      "costPerMove": 0.04,
+      "costInitial": 1.8,
+      "costFinal": 3.5
+    }
+  },
+  {
+    "name": "Drone 6",
+    "id": "6",
+    "capability": {
+      "cooling": false,
+      "heating": true,
+      "capacity": 4.0,
+      "maxMoves": 2000,
+      "costPerMove": 0.03,
+      "costInitial": 3.0,
+      "costFinal": 4.0
+    }
+  },
+  {
+    "name": "Drone 7",
+    "id": "7",
+    "capability": {
+      "cooling": false,
+      "heating": true,
+      "capacity": 8.0,
+      "maxMoves": 1000,
+      "costPerMove": 0.015,
+      "costInitial": 1.4,
+      "costFinal": 2.2
+    }
+  },
+  {
+    "name": "Drone 8",
+    "id": "8",
+    "capability": {
+      "cooling": true,
+      "heating": false,
+      "capacity": 20.0,
+      "maxMoves": 4000,
+      "costPerMove": 0.04,
+      "costInitial": 5.4,
+      "costFinal": 12.5
+    }
+  },
+  {
+    "name": "Drone 9",
+    "id": "9",
+    "capability": {
+      "cooling": true,
+      "heating": true,
+      "capacity": 8.0,
+      "maxMoves": 1000,
+      "costPerMove": 0.06,
+      "costInitial": 2.4,
+      "costFinal": 1.5
+    }
+  },
+  {
+    "name": "Drone 10",
+    "id": "10",
+    "capability": {
+      "cooling": false,
+      "heating": false,
+      "capacity": 12.0,
+      "maxMoves": 1500,
+      "costPerMove": 0.07,
+      "costInitial": 1.4,
+      "costFinal": 3.5
+    }
+  }
+]

@@ -1,0 +1,115 @@
+[
+  {
+    "servicePointId": 1,
+    "drones": [
+      {
+        "id": "1",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "WEDNESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "2",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "TUESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "WEDNESDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SATURDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "3",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "TUESDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "12:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "4",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "TUESDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "WEDNESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SATURDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "5",
+        "availability": [
+          {"dayOfWeek": "TUESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SATURDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "11:59:59"}
+        ]
+      }
+    ]
+  },
+  {
+    "servicePointId": 2,
+    "drones": [
+      {
+        "id": "6",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "WEDNESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SATURDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "7",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "TUESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "WEDNESDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SATURDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "8",
+        "availability": [
+          {"dayOfWeek": "TUESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "9",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "TUESDAY", "from": "00:00:00", "until": "11:59:59"},
+          {"dayOfWeek": "WEDNESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "THURSDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SATURDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "SUNDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      },
+      {
+        "id": "10",
+        "availability": [
+          {"dayOfWeek": "MONDAY", "from": "12:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "TUESDAY", "from": "00:00:00", "until": "23:59:59"},
+          {"dayOfWeek": "FRIDAY", "from": "00:00:00", "until": "23:59:59"}
+        ]
+      }
+    ]
+  }
+]
