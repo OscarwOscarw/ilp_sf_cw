@@ -4,64 +4,65 @@
 
 ### 1. Testing Coverage Limitations
 
-**Optimistic Inaccuracy of Testing**
-- Testing can only check specific cases, not all possible behaviors
-- Example: A* algorithm tests verify known scenarios but may miss novel edge cases
-- Impact: Some calculation errors may remain undetected
+**Based on Implemented Test Cases**
+- Unit tests for A* algorithm cover specific scenarios but may miss complex obstacle configurations not included in test data
+- GeoJSON conversion tests validate known structures but may not cover all possible invalid JSON formats
+- Boundary testing covers defined edge cases but cannot guarantee all real-world boundary conditions
 
-**Static Analysis Limitations**
-- Automated tools may produce false positives (pessimistic inaccuracy)
-- Security scanners might miss novel vulnerability patterns
-- Impact: Security assurance is limited and may include false alarms
+**Static Analysis Limitations Evidenced in Tests**
+- Test cases show validation of null inputs, missing coordinates, and malformed requests
+- However, security aspects like authentication and injection attacks are not covered in current test suite
+- Justification: Academic prototype focuses on functional validation over security
 
-### 2. Environmental Limitations
+### 2. Environmental Limitations Confirmed by Tests
 
-**Simulation vs Reality Gap**
-- All testing uses simulated drone behavior
-- Real-world factors (weather, interference) not fully represented
-- Impact: Performance in deployment may differ from test results
+**Simulation vs Reality Gap (Evidenced)**
+- All system tests use simulated drone behavior and JSON test data
+- Performance tests measure computational time but not real-world flight factors
+- Integration tests connect to mock or local data sources, not production APIs
 
-**Resource Constraints**
-- Limited time for exhaustive testing (50-hour coursework constraint)
-- Cannot implement all desired test types
-- Impact: Test coverage is necessarily selective
+**Resource Constraints Demonstrated**
+- Test suites are comprehensive but selective due to time constraints
+- Performance benchmarks (2 seconds, 30 seconds) are tested but not under extreme scale
+- Emergency scenario testing validates priority logic but not physical emergency response
 
-### 3. Prototype-Specific Limitations
+### 3. Prototype-Specific Limitations (Based on Test Evidence)
 
-**Security Testing Gaps**
-- No full penetration testing performed
-- Limited security validation due to academic prototype context
-- Justification: Focus on core functionality validation
+**Security Testing Gaps (Confirmed)**
+- No penetration testing or security vulnerability tests in current suite
+- Input validation tests exist but focus on format, not security exploits
+- Justification: Focus on core functionality as evidenced by extensive unit and integration tests
 
-**Hardware Abstraction**
-- Testing abstracted from real drone hardware
-- Hardware-specific failures not detectable
-- Acceptance: Appropriate for algorithm validation phase
+**Hardware Abstraction (As Tested)**
+- All path planning tests use coordinate calculations without hardware integration
+- Drone capability tests validate logical constraints (capacity, cooling) but not physical hardware
+- Acceptance: Appropriate for algorithm validation phase as shown by test focus
 
 ### 4. Overall Appropriateness Assessment
 
-**Strengths of Current Approach**
-- Provides early fault detection through requirement analysis
-- Combines multiple test techniques for broader coverage
-- Focuses effort on most critical constraints
-- Appropriate for prototype development phase
+**Strengths Demonstrated by Test Implementation**
+- Comprehensive unit testing: A* algorithm, distance calculation, coordinate validation
+- Integration testing: Multi-drone task assignment, GeoJSON conversion, API interactions
+- System testing: End-to-end workflows, emergency scenarios, performance constraints
+- Boundary testing: Null inputs, invalid coordinates, edge cases documented in test files
 
-**Acknowledged Gaps**
-- Cannot guarantee absence of all faults
-- Security validation is incomplete
-- Real-world performance uncertainty remains
+**Acknowledged Gaps (Based on Test Scope)**
+- No load testing beyond defined performance benchmarks
+- Limited error recovery testing for hardware failures
+- Security testing restricted to input validation only
 
 **Conclusion**
-The testing approach is appropriate for its context: an academic prototype focused on algorithm validation. It provides reasonable assurance for core functionality while acknowledging practical limitations. This aligns with realistic software testing practice where perfect verification is impossible, and we accept "approximately correct" systems with documented limitations.
+The implemented test suite appropriately validates the academic prototype's core functionality. Unit tests verify algorithm correctness, integration tests validate component interactions, and system tests confirm end-to-end workflows. While security and hardware integration remain untested, this aligns with the project's focus on algorithm and system design validation.
 
-## Mitigation Strategies
+## Mitigation Strategies Based on Test Evidence
 
-### For Current Project
-- Clear documentation of all known limitations
-- Focused testing on highest-risk areas (medical emergencies)
-- Conservative safety margins in performance requirements
+### For Current Project (Based on Test Gaps)
+- Extend performance testing to include memory usage monitoring
+- Add additional edge cases for complex obstacle configurations
+- Implement more comprehensive error recovery scenarios
 
-### For Production System
-- Additional security testing would be required
-- Hardware-in-the-loop testing needed
-- Regulatory compliance testing for medical applications
+### For Production System (Beyond Current Tests)
+- Security test suite addition: penetration testing, vulnerability scanning
+- Hardware-in-the-loop testing with real drone components
+- Regulatory compliance testing for medical delivery applications
+- Extended load testing with realistic production workloads
