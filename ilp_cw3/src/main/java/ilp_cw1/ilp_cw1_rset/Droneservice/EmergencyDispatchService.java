@@ -94,9 +94,9 @@ public class EmergencyDispatchService {
     /**
      * Filter drones that can handle emergency task (check capability match and availability)
      */
-    private List<Drone> findCandidateDronesForEmergency(EmergencyMedDispatchRec emergencyTask,
-                                                        List<Drone> allDrones,
-                                                        List<DroneForServicePoint> availableDronesInfo) {
+    public List<Drone> findCandidateDronesForEmergency(EmergencyMedDispatchRec emergencyTask,
+                                                       List<Drone> allDrones,
+                                                       List<DroneForServicePoint> availableDronesInfo) {
         return allDrones.stream()
                 .filter(drone -> canDroneHandleEmergency(drone, emergencyTask, availableDronesInfo))
                 .collect(Collectors.toList());
@@ -105,9 +105,9 @@ public class EmergencyDispatchService {
     /**
      * Check if drone can handle emergency task (capability match + time availability)
      */
-    private boolean canDroneHandleEmergency(Drone drone,
-                                            EmergencyMedDispatchRec task,
-                                            List<DroneForServicePoint> availableDronesInfo) {
+    public boolean canDroneHandleEmergency(Drone drone,
+                                           EmergencyMedDispatchRec task,
+                                           List<DroneForServicePoint> availableDronesInfo) {
         MedDispatchRec.Requirements req = task.getRequirements();
         Drone.DroneCapability capability = drone.getCapability();
 
@@ -137,7 +137,7 @@ public class EmergencyDispatchService {
     /**
      * Check if drone is available at current time
      */
-    private boolean isDroneAvailable(String droneId, List<DroneForServicePoint> availableDronesInfo) {
+    public boolean isDroneAvailable(String droneId, List<DroneForServicePoint> availableDronesInfo) {
         for (DroneForServicePoint sp : availableDronesInfo) {
             for (DroneForServicePoint.DroneAvailability da : sp.getDrones()) {
                 if (droneId.equals(da.getId())) {
@@ -152,7 +152,7 @@ public class EmergencyDispatchService {
     /**
      * Find idle drone among candidate drones
      */
-    private Drone findIdleDrone(List<Drone> candidateDrones, List<Drone> workingDrones) {
+    public Drone findIdleDrone(List<Drone> candidateDrones, List<Drone> workingDrones) {
         Set<String> workingDroneIds = workingDrones.stream()
                 .map(Drone::getId)
                 .collect(Collectors.toSet());
@@ -167,9 +167,9 @@ public class EmergencyDispatchService {
     /**
      * Calculate interrupt costs for candidate drones
      */
-    private Map<Drone, Double> calculateInterruptCostsForCandidates(List<Drone> candidateDrones,
-                                                                    Map<Drone, List<MedDispatchRec>> droneToTasksMap,
-                                                                    Map<Integer, PositionDto> taskLocations) {
+    public Map<Drone, Double> calculateInterruptCostsForCandidates(List<Drone> candidateDrones,
+                                                                   Map<Drone, List<MedDispatchRec>> droneToTasksMap,
+                                                                   Map<Integer, PositionDto> taskLocations) {
         Map<Drone, Double> costs = new HashMap<>();
         Set<String> workingDroneIds = droneToTasksMap.keySet().stream().map(Drone::getId).collect(Collectors.toSet());
 
@@ -209,10 +209,10 @@ public class EmergencyDispatchService {
     /**
      * Estimate interrupt cost (based on remaining path ratio and drone cost parameters)
      */
-    private double estimateInterruptCost(Drone drone,
-                                         DynamicDispatchService.DroneStatusDto status,
-                                         List<MedDispatchRec> tasks,
-                                         Map<Integer, PositionDto> taskLocations) {
+    public double estimateInterruptCost(Drone drone,
+                                        DynamicDispatchService.DroneStatusDto status,
+                                        List<MedDispatchRec> tasks,
+                                        Map<Integer, PositionDto> taskLocations) {
         double remainingPathRatio = dynamicDispatchService.estimateInterruptCost(drone.getId());
 
         Drone.DroneCapability capability = drone.getCapability();
@@ -226,7 +226,7 @@ public class EmergencyDispatchService {
     /**
      * Calculate reassign costs (1.5 times interrupt cost)
      */
-    private Map<Drone, Double> calculateReassignCosts(Map<Drone, Double> interruptCosts) {
+    public Map<Drone, Double> calculateReassignCosts(Map<Drone, Double> interruptCosts) {
         Map<Drone, Double> reassignCosts = new HashMap<>();
         interruptCosts.forEach((drone, cost) -> {
             double reassCost = cost * 1.5;
@@ -239,9 +239,9 @@ public class EmergencyDispatchService {
     /**
      * Select optimal drone (meets cost constraints and has lowest reassign cost)
      */
-    private Drone selectOptimalDrone(List<Drone> candidates,
-                                     Map<Drone, Double> interruptCosts,
-                                     Map<Drone, Double> reassignCosts) {
+    public Drone selectOptimalDrone(List<Drone> candidates,
+                                    Map<Drone, Double> interruptCosts,
+                                    Map<Drone, Double> reassignCosts) {
         System.out.println("\n--- Starting optimal drone selection (cost constraint: reassign cost < interrupt cost * 10) ---");
 
         List<Drone> viableDrones = candidates.stream()
@@ -268,7 +268,7 @@ public class EmergencyDispatchService {
     /**
      * Build dispatch result and execute emergency task insertion
      */
-    private EmergencyHandleResult buildAndDispatchResult(Drone drone, EmergencyMedDispatchRec emergencyTask, boolean isIdle, double baseCost) {
+    public EmergencyHandleResult buildAndDispatchResult(Drone drone, EmergencyMedDispatchRec emergencyTask, boolean isIdle, double baseCost) {
         DeliveryPathResponse.Delivery emergencyDelivery = new DeliveryPathResponse.Delivery();
         emergencyDelivery.setDeliveryId(emergencyTask.getId());
 
@@ -367,11 +367,11 @@ public class EmergencyDispatchService {
         }
     }
 
-    private DeliveryPathResponse.Delivery calculateEmergencyDeliveryPath(Drone drone,
-                                                                         EmergencyMedDispatchRec emergencyTask,
-                                                                         PositionDto startPosition,
-                                                                         boolean isIdle,
-                                                                         boolean forceBypass) {
+    public DeliveryPathResponse.Delivery calculateEmergencyDeliveryPath(Drone drone,
+                                                                        EmergencyMedDispatchRec emergencyTask,
+                                                                        PositionDto startPosition,
+                                                                        boolean isIdle,
+                                                                        boolean forceBypass) {
         System.out.println("=== Calculating emergency order path ===");
         System.out.println("Emergency level: " + emergencyTask.getEmergencyLevel());
         System.out.println("Force bypass restricted areas: " + forceBypass);
@@ -424,14 +424,14 @@ public class EmergencyDispatchService {
     /**
      * Determine if should bypass restricted areas (level 5 and above directly bypass)
      */
-    private boolean shouldBypassRestrictedAreas(EmergencyMedDispatchRec emergencyTask) {
+    public boolean shouldBypassRestrictedAreas(EmergencyMedDispatchRec emergencyTask) {
         return emergencyTask.getEmergencyLevel() >= 5;
     }
 
     /**
      * Calculate direct path (without considering restricted areas)
      */
-    private List<PositionDto> calculateDirectPath(PositionDto start, PositionDto end) {
+    public List<PositionDto> calculateDirectPath(PositionDto start, PositionDto end) {
         List<PositionDto> path = new ArrayList<>();
         path.add(start);
 
@@ -454,7 +454,7 @@ public class EmergencyDispatchService {
     /**
      * Check if path can reach target position
      */
-    private boolean isPathReachable(List<PositionDto> path, PositionDto target) {
+    public boolean isPathReachable(List<PositionDto> path, PositionDto target) {
         if (path.isEmpty()) return false;
 
         PositionDto lastPoint = path.get(path.size() - 1);
@@ -464,7 +464,7 @@ public class EmergencyDispatchService {
     /**
      * Calculate distance between two points (simplified version)
      */
-    private double calculateDistance(PositionDto p1, PositionDto p2) {
+    public double calculateDistance(PositionDto p1, PositionDto p2) {
         double dx = p1.getLng() - p2.getLng();
         double dy = p1.getLat() - p2.getLat();
         return Math.sqrt(dx * dx + dy * dy);
@@ -473,8 +473,8 @@ public class EmergencyDispatchService {
     /**
      * Get name of blocking restricted area
      */
-    private String getBlockingRestrictedAreaName(PositionDto start, PositionDto end,
-                                                 List<RestrictedArea> restrictedAreas) {
+    public String getBlockingRestrictedAreaName(PositionDto start, PositionDto end,
+                                                List<RestrictedArea> restrictedAreas) {
         for (RestrictedArea area : restrictedAreas) {
             if (droneService.doesLineIntersectPolygon(start, end, area.getVertices())) {
                 return area.getName() != null ? area.getName() : "Unknown restricted area";
@@ -491,7 +491,7 @@ public class EmergencyDispatchService {
     /**
      * Initialize simulation state for idle drone
      */
-    private void initializeIdleDroneState(Drone drone) {
+    public void initializeIdleDroneState(Drone drone) {
         DeliveryPathResponse.DronePath idleDronePath = new DeliveryPathResponse.DronePath();
         idleDronePath.setDroneId(drone.getId());
         idleDronePath.setDeliveries(new ArrayList<>());
@@ -584,8 +584,8 @@ public class EmergencyDispatchService {
     /**
      * Build dispatch result (supports bypass restricted areas)
      */
-    private EmergencyHandleResult buildAndDispatchResultWithBypass(Drone drone, EmergencyMedDispatchRec emergencyTask,
-                                                                   boolean isIdle, double baseCost, boolean bypassRestrictedAreas) {
+    public EmergencyHandleResult buildAndDispatchResultWithBypass(Drone drone, EmergencyMedDispatchRec emergencyTask,
+                                                                  boolean isIdle, double baseCost, boolean bypassRestrictedAreas) {
         DeliveryPathResponse.Delivery emergencyDelivery = new DeliveryPathResponse.Delivery();
         emergencyDelivery.setDeliveryId(emergencyTask.getId());
 
