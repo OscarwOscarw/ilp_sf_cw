@@ -23,6 +23,7 @@ jobs:
 
       - name: Build and Test with Coverage
         run: |
+          cd ilp_cw3
           mvn clean test
           mvn jacoco:report
 
@@ -31,7 +32,5 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: |
-            target/surefire-reports/
-            target/site/jacoco/
+          path: ilp_cw3/target/
           retention-days: 30
