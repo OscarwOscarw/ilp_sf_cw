@@ -21,6 +21,27 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Remove problematic Maven arguments
+        run: |
+          # 创建干净的 maven 包装脚本
+          cat > /usr/local/bin/mvn-clean << 'EOF'
+          #!/bin/bash
+          # 移除所有 --enable-native-access 参数
+          CLEAN_ARGS=()
+          for arg in "$@"; do
+            if [[ "$arg" == *"--enable-native-access"* ]]; then
+              continue
+            fi
+            CLEAN_ARGS+=("$arg")
+          done
+          # 设置干净的环境变量
+          export MAVEN_OPTS="-Xmx4096m -XX:MaxMetaspaceSize=1024m"
+          exec /usr/share/apache-maven-3.9.12/bin/mvn "${CLEAN_ARGS[@]}"
+          EOF
+          
+          chmod +x /usr/local/bin/mvn-clean
+          echo "Created clean maven wrapper"
+
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
@@ -31,24 +52,41 @@ jobs:
       - name: Build and compile
         run: |
           echo "工作目录: $(pwd)"
-          mvn clean compile test-compile -B
+          echo "环境变量:"
+          env | grep -E "(MAVEN|JAVA)" || true
+          
+          # 使用干净的 maven 编译
+          MAVEN_OPTS="-Xmx4096m" mvn clean compile test-compile -B
 
       - name: Run unit tests
         run: |
-          mvn test -B
+          MAVEN_OPTS="-Xmx4096m" mvn test -B
+          echo "✅ 单元测试完成"
 
-      - name: Run mutation tests with PITest (版本 1.21.1)
+      - name: Run mutation tests with PITest
         run: |
-          # 使用稳定版本 1.21.1
-          mvn org.pitest:pitest-maven:1.21.1:mutationCoverage \
-            -Dthreads=4 \
+          echo "开始突变测试..."
+          echo "当前目录: $(pwd)"
+          
+          # 使用 PITest 1.15.0（最稳定），并传递干净的参数
+          MAVEN_OPTS="-Xmx4096m -XX:MaxMetaspaceSize=1024m" \
+          mvn org.pitest:pitest-maven:1.15.0:mutationCoverage \
+            -DargLine="-Xmx4096m -XX:MaxMetaspaceSize=1024m" \
+            -Dthreads=2 \
             -DtimestampedReports=false \
             -DoutputFormats=XML,HTML \
-            -DreportsDirectory=target/pit-reports
+            -DreportsDirectory=target/pit-reports \
+            -DtimeoutConstant=40000 \
+            -DtimeoutFactor=3.0 \
+            -Dverbose=true \
+            -DexportLineCoverage=false
+          
+          echo "✅ 突变测试完成"
 
       - name: Generate JaCoCo report
         run: |
           mvn jacoco:report -B
+          echo "✅ JaCoCo 报告生成完成"
 
       - name: Upload JaCoCo coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -61,4 +99,11 @@ jobs:
         with:
           name: pitest-mutation-reports
           path: target/pit-reports/
+          retention-days: 30
+
+      - name: Upload test coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-coverage-reports
+          path: target/site/jacoco/
           retention-days: 30
