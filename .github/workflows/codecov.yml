@@ -5,7 +5,6 @@ jobs:
   test-and-coverage:
     runs-on: ubuntu-latest
 
-    # 解决方案1：在 job 级别设置默认工作目录
     defaults:
       run:
         working-directory: ./ilp_cw3
@@ -22,27 +21,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Debug - Verify directory
-        run: |
-          echo "当前目录: $(pwd)"
-          echo "检查 ilp_cw3 目录:"
-          if [ -d "ilp_cw3" ]; then
-            echo "✅ ilp_cw3 目录存在"
-            cd ilp_cw3
-            echo "进入 ilp_cw3 目录: $(pwd)"
-            ls -la
-            if [ -f "pom.xml" ]; then
-              echo "✅ pom.xml 存在"
-              head -5 pom.xml
-            else
-              echo "❌ pom.xml 不存在"
-            fi
-          else
-            echo "❌ ilp_cw3 目录不存在"
-            echo "当前目录内容:"
-            ls -la
-          fi
-
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
@@ -53,29 +31,16 @@ jobs:
       - name: Build and compile
         run: |
           echo "工作目录: $(pwd)"
-          # 确保在 ilp_cw3 目录
-          if [ ! -f "pom.xml" ]; then
-            echo "未找到 pom.xml，尝试进入 ilp_cw3 目录..."
-            cd ilp_cw3
-            echo "现在在: $(pwd)"
-          fi
           mvn clean compile test-compile -B
 
       - name: Run unit tests
         run: |
-          # 如果 pom.xml 不在当前目录，进入 ilp_cw3
-          if [ ! -f "pom.xml" ]; then
-            cd ilp_cw3
-          fi
           mvn test -B
 
-      - name: Run mutation tests with PITest
+      - name: Run mutation tests with PITest (版本 1.21.1)
         run: |
-          # 如果 pom.xml 不在当前目录，进入 ilp_cw3
-          if [ ! -f "pom.xml" ]; then
-            cd ilp_cw3
-          fi
-          mvn org.pitest:pitest-maven:mutationCoverage \
+          # 使用稳定版本 1.21.1
+          mvn org.pitest:pitest-maven:1.21.1:mutationCoverage \
             -Dthreads=4 \
             -DtimestampedReports=false \
             -DoutputFormats=XML,HTML \
@@ -83,10 +48,6 @@ jobs:
 
       - name: Generate JaCoCo report
         run: |
-          # 如果 pom.xml 不在当前目录，进入 ilp_cw3
-          if [ ! -f "pom.xml" ]; then
-            cd ilp_cw3
-          fi
           mvn jacoco:report -B
 
       - name: Upload JaCoCo coverage to Codecov
