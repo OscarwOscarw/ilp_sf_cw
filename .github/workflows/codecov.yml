@@ -11,18 +11,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v3
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Debug - Check repository structure
+      - name: Debug - Show directory structure
         run: |
-          echo "=== 仓库结构 ==="
-          find . -type f -name "*.java" -o -name "pom.xml" -o -name "*.yml" | sort
-          echo ""
-          echo "=== 当前目录 ==="
+          echo "=== 初始目录结构 ==="
           pwd
           ls -la
           echo ""
@@ -30,29 +21,19 @@ jobs:
           if [ -d "ilp_cw3" ]; then
             echo "✅ 找到 ilp_cw3 目录"
             cd ilp_cw3
-            echo "切换到: $(pwd)"
+            echo "现在在: $(pwd)"
+            echo "目录内容:"
             ls -la
           else
-            echo "❌ ilp_cw3 目录不存在"
-            # 尝试查找任何包含 pom.xml 的目录
-            POM_DIR=$(find . -name "pom.xml" -type f | head -1 | xargs dirname)
-            if [ -n "$POM_DIR" ] && [ "$POM_DIR" != "." ]; then
-              echo "找到 pom.xml 在: $POM_DIR"
-              cd "$POM_DIR"
-              echo "切换到: $(pwd)"
-            fi
-          fi
-
-      - name: Verify pom.xml exists
-        run: |
-          echo "当前目录: $(pwd)"
-          if [ -f "pom.xml" ]; then
-            echo "✅ pom.xml 存在"
-            head -20 pom.xml
-          else
-            echo "❌ pom.xml 不存在"
+            echo "❌ 错误: ilp_cw3 目录不存在"
             exit 1
           fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
       - name: Cache Maven dependencies
         uses: actions/cache@v3
@@ -61,19 +42,37 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build and run tests
+      - name: Build and compile
         run: |
-          echo "工作目录: $(pwd)"
+          echo "当前工作目录: $(pwd)"
+          echo "检查 pom.xml:"
+          if [ -f "pom.xml" ]; then
+            echo "✅ pom.xml 存在"
+          else
+            echo "❌ pom.xml 不存在"
+            exit 1
+          fi
+          
+          # 编译项目
           mvn clean compile test-compile -B
+
+      - name: Run unit tests
+        run: |
           mvn test -B
 
       - name: Run mutation tests with PITest
         run: |
+          echo "开始突变测试..."
           mvn org.pitest:pitest-maven:mutationCoverage \
             -Dthreads=4 \
             -DtimestampedReports=false \
             -DoutputFormats=XML,HTML \
-            -DreportsDirectory=target/pit-reports
+            -DreportsDirectory=target/pit-reports \
+            -Dverbose=true
+
+      - name: Generate JaCoCo report
+        run: |
+          mvn jacoco:report -B
 
       - name: Upload JaCoCo coverage to Codecov
         uses: codecov/codecov-action@v3
@@ -81,9 +80,18 @@ jobs:
           files: ./target/site/jacoco/jacoco.xml
           fail_ci_if_error: false
 
-      - name: Upload PITest results
+      - name: Upload PITest reports
         uses: actions/upload-artifact@v4
         with:
-          name: pitest-reports
+          name: pitest-mutation-reports
           path: target/pit-reports/
+          retention-days: 30
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            target/surefire-reports/
+            target/failsafe-reports/
           retention-days: 30
