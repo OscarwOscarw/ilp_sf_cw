@@ -1,4 +1,4 @@
-name: Codecov with PITest
+name: Codecov with Mutation Testing
 on: [push, pull_request]
 
 jobs:
@@ -21,27 +21,6 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Remove problematic Maven arguments
-        run: |
-          # 创建干净的 maven 包装脚本
-          cat > /usr/local/bin/mvn-clean << 'EOF'
-          #!/bin/bash
-          # 移除所有 --enable-native-access 参数
-          CLEAN_ARGS=()
-          for arg in "$@"; do
-            if [[ "$arg" == *"--enable-native-access"* ]]; then
-              continue
-            fi
-            CLEAN_ARGS+=("$arg")
-          done
-          # 设置干净的环境变量
-          export MAVEN_OPTS="-Xmx4096m -XX:MaxMetaspaceSize=1024m"
-          exec /usr/share/apache-maven-3.9.12/bin/mvn "${CLEAN_ARGS[@]}"
-          EOF
-          
-          chmod +x /usr/local/bin/mvn-clean
-          echo "Created clean maven wrapper"
-
       - name: Cache Maven dependencies
         uses: actions/cache@v3
         with:
@@ -52,34 +31,43 @@ jobs:
       - name: Build and compile
         run: |
           echo "工作目录: $(pwd)"
-          echo "环境变量:"
-          env | grep -E "(MAVEN|JAVA)" || true
-          
-          # 使用干净的 maven 编译
-          MAVEN_OPTS="-Xmx4096m" mvn clean compile test-compile -B
+          # 使用最小的 MAVEN_OPTS
+          MAVEN_OPTS="-Xmx2048m" mvn clean compile test-compile -B
 
       - name: Run unit tests
         run: |
-          MAVEN_OPTS="-Xmx4096m" mvn test -B
+          MAVEN_OPTS="-Xmx2048m" mvn test -B
           echo "✅ 单元测试完成"
 
-      - name: Run mutation tests with PITest
+      - name: Direct Java execution of PITest (绕过 Maven)
         run: |
-          echo "开始突变测试..."
-          echo "当前目录: $(pwd)"
+          echo "=== 直接使用 Java 运行 PITest ==="
           
-          # 使用 PITest 1.15.0（最稳定），并传递干净的参数
-          MAVEN_OPTS="-Xmx4096m -XX:MaxMetaspaceSize=1024m" \
-          mvn org.pitest:pitest-maven:1.15.0:mutationCoverage \
-            -DargLine="-Xmx4096m -XX:MaxMetaspaceSize=1024m" \
-            -Dthreads=2 \
-            -DtimestampedReports=false \
-            -DoutputFormats=XML,HTML \
-            -DreportsDirectory=target/pit-reports \
-            -DtimeoutConstant=40000 \
-            -DtimeoutFactor=3.0 \
-            -Dverbose=true \
-            -DexportLineCoverage=false
+          # 1. 下载 PITest jar
+          echo "下载 PITest..."
+          wget -q -O /tmp/pitest.jar https://repo1.maven.org/maven2/org/pitest/pitest/1.15.0/pitest-1.15.0.jar
+          wget -q -O /tmp/pitest-entry.jar https://repo1.maven.org/maven2/org/pitest/pitest-entry/1.15.0/pitest-entry-1.15.0.jar
+          wget -q -O /tmp/pitest-junit5.jar https://repo1.maven.org/maven2/org/pitest/pitest-junit5-plugin/1.2.0/pitest-junit5-plugin-1.2.0.jar
+          
+          # 2. 构建 classpath
+          echo "构建 classpath..."
+          mvn dependency:build-classpath -Dmdep.outputFile=/tmp/classpath.txt -q
+          CLASSPATH=$(cat /tmp/classpath.txt):target/test-classes:target/classes:/tmp/pitest.jar:/tmp/pitest-entry.jar:/tmp/pitest-junit5.jar
+          
+          # 3. 直接运行 PITest
+          echo "运行突变测试..."
+          java -cp "$CLASSPATH" \
+            -Xmx4096m \
+            org.pitest.mutationtest.commandline.MutationCoverageReport \
+            --reportDir target/pit-reports \
+            --sourceDirs src/main/java \
+            --targetClasses "ilp_cw1.ilp_cw1_rset.Droneservice.*" \
+            --targetTests "*Test" \
+            --threads 2 \
+            --timeoutConst 40000 \
+            --timeoutFactor 3.0 \
+            --outputFormats HTML,XML \
+            --verbose
           
           echo "✅ 突变测试完成"
 
