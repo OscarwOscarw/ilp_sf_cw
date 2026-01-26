@@ -182,7 +182,7 @@ jobs:
           echo "测试状态:"
           echo "- 总测试: ${{ steps.run-tests.outputs.total_tests || 'N/A' }}"
           echo "- 失败: ${{ steps.run-tests.outputs.failed_tests || 'N/A' }}"
-          echo "- 通过的测试类: ${{ steps.run-tests.outputs.passed_count || '0' }}"
+          echo "- 通过的测试类QWQ: ${{ steps.run-tests.outputs.passed_count || '0' }}"
           
           if [ -f "ilp_cw3/target/pit-reports/index.html" ]; then
             echo "✅ 变异测试报告已生成"
