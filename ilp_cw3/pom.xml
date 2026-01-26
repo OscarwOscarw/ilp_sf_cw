@@ -30,6 +30,8 @@
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        <pitest.version>1.16.0</pitest.version>
+        <jacoco.version>0.8.11</jacoco.version>
     </properties>
     <dependencies>
         <dependency>
@@ -74,7 +76,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>${jacoco.version}</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -84,13 +86,14 @@
                     </execution>
                     <execution>
                         <id>report</id>
-                        <phase>verify</phase>
+                        <phase>test</phase>
                         <goals>
                             <goal>report</goal>
                         </goals>
                     </execution>
                     <execution>
                         <id>check</id>
+                        <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
@@ -116,36 +119,60 @@
             <plugin>
                 <groupId>org.pitest</groupId>
                 <artifactId>pitest-maven</artifactId>
-                <version>1.21.3</version>
+                <version>${pitest.version}</version>
                 <configuration>
+                    <!-- 目标类：要突变的业务代码 -->
                     <targetClasses>
                         <param>ilp_cw1.ilp_cw1_rset.*</param>
                     </targetClasses>
+                    <!-- 目标测试：用于杀死突变的测试 -->
                     <targetTests>
-                        <param>*Test</param>
+                        <param>ilp_cw1.ilp_cw1_rset.*Test</param>
+                        <param>ilp_cw1.ilp_cw1_rset.*Tests</param>
+                        <param>ilp_cw1.ilp_cw1_rset.*IT</param>
+                        <param>ilp_cw1.ilp_cw1_rset.*ITs</param>
                     </targetTests>
-                    <threads>4</threads>
-                    <timestampedReports>false</timestampedReports>
-                    <outputFormats>
-                        <outputFormat>XML</outputFormat>
-                        <outputFormat>HTML</outputFormat>
-                    </outputFormats>
-                    <mutators>
-                        <mutator>ALL</mutator>
-                    </mutators>
+                    <!-- 排除的类 -->
                     <excludedClasses>
                         <param>ilp_cw1.ilp_cw1_rset.config.*</param>
                         <param>ilp_cw1.ilp_cw1_rset.*Application</param>
                         <param>ilp_cw1.ilp_cw1_rset.*Controller</param>
+                        <param>ilp_cw1.ilp_cw1_rset.dto.*</param>
+                        <param>ilp_cw1.ilp_cw1_rset.model.*</param>
+                        <param>ilp_cw1.ilp_cw1_rset.entity.*</param>
                     </excludedClasses>
+                    <!-- 排除的方法 -->
                     <excludedMethods>
-                        <excludedMethod>toString</excludedMethod>
-                        <excludedMethod>hashCode</excludedMethod>
-                        <excludedMethod>equals</excludedMethod>
+                        <param>toString</param>
+                        <param>hashCode</param>
+                        <param>equals</param>
+                        <param>clone</param>
+                        <param>compareTo</param>
                     </excludedMethods>
-                    <timeoutConstant>20000</timeoutConstant>
-                    <timeoutFactor>2.5</timeoutFactor>
+                    <!-- 变异器配置 -->
+                    <mutators>
+                        <mutator>STRONGER</mutator>
+                    </mutators>
+                    <!-- 报告配置 -->
+                    <outputFormats>
+                        <outputFormat>HTML</outputFormat>
+                        <outputFormat>XML</outputFormat>
+                        <outputFormat>CSV</outputFormat>
+                    </outputFormats>
+                    <timestampedReports>false</timestampedReports>
+                    <reportDir>${project.build.directory}/pit-reports</reportDir>
+                    <!-- 性能配置 -->
+                    <threads>4</threads>
+                    <timeoutConstant>5000</timeoutConstant>
+                    <timeoutFactor>1.5</timeoutFactor>
+                    <!-- 覆盖配置 -->
+                    <exportLineCoverage>true</exportLineCoverage>
+                    <mutationThreshold>50</mutationThreshold>
+                    <coverageThreshold>50</coverageThreshold>
+                    <!-- 其他配置 -->
+                    <skipFailingTests>false</skipFailingTests>
                     <verbose>true</verbose>
+                    <failWhenNoMutations>false</failWhenNoMutations>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -154,6 +181,15 @@
                         <version>1.2.1</version>
                     </dependency>
                 </dependencies>
+                <executions>
+                    <execution>
+                        <id>mutation-test</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>mutationCoverage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

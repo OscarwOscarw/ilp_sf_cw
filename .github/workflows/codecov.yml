@@ -1,13 +1,9 @@
-name: Codecov with Mutation Testing
+name: Mutation Testing with Code Coverage
 on: [push, pull_request]
 
 jobs:
   test-and-coverage:
     runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: ./ilp_cw3
 
     steps:
       - name: Checkout code
@@ -20,106 +16,139 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
 
-      - name: Cache Maven dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Build and compile
+      - name: Validate Maven configuration
         run: |
-          echo "工作目录: $(pwd)"
-          echo "检查 Maven 配置..."
-          mvn -v
+          echo "=== 验证 Maven 配置 ==="
+          mvn --version
+          echo "当前目录: $(pwd)"
+          echo "目录结构:"
+          find . -maxdepth 3 -type f -name "*.java" | grep -v ".git" | sort
+          echo "POM 文件:"
+          cat pom.xml | grep -A2 -B2 "pitest\|jacoco"
+
+      - name: Clean and compile
+        run: |
+          echo "=== 清理和编译 ==="
           mvn clean compile test-compile -B
+          echo "编译完成"
 
-      - name: Update PITest version in pom.xml (如果存在)
+      - name: Run tests with JaCoCo
         run: |
-          if [ -f "pom.xml" ]; then
-            echo "更新 PITest 版本到可用版本..."
-            # 备份原文件
-            cp pom.xml pom.xml.backup
-            # 将 1.21.3 替换为 1.16.0（稳定版本）
-            sed -i 's/<version>1.21.3<\/version>/<version>1.16.0<\/version>/g' pom.xml
-            echo "PITest 版本更新完成"
-          else
-            echo "未找到 pom.xml 文件"
-          fi
-
-      - name: Run successful tests only
-        run: |
-          echo "运行通过的测试..."
-          # 首先找出哪些测试类能通过
-          mvn test -B -Dtest="*Test" -DfailIfNoTests=false > test-output.txt 2>&1 || true
-          
-          # 提取通过的测试类
-          grep -o "Running ilp_cw1\.ilp_cw1_rset\.[A-Za-z]*Test" test-output.txt | sort -u > passed-tests.txt || echo "分析测试输出"
-          
-          if [ -s "passed-tests.txt" ]; then
-            echo "通过的测试类:"
-            cat passed-tests.txt
-          
-            # 只对通过的测试运行 PITest
-            TESTS=$(cat passed-tests.txt | sed 's/Running //' | tr '\n' ',' | sed 's/,$//')
-            echo "运行 PITest 对于: $TESTS"
-          
-            # 检查 PITest 插件是否配置正确
-            echo "检查 PITest 配置..."
-            mvn help:describe -Dplugin=org.pitest:pitest-maven -Ddetail || echo "PITest 插件描述失败"
-          
-            # 运行 PITest，使用更稳定的配置
-            mvn org.pitest:pitest-maven:mutationCoverage \
-              -DtargetTests="$TESTS" \
-              -Dthreads=2 \
-              -DtimestampedReports=false \
-              -DoutputFormats=HTML,XML \
-              -DreportsDirectory=target/pit-reports \
-              -DskipFailingTests=true \
-              -Dverbose=true || echo "PITest 执行完成"
-          else
-            echo "没有找到通过的测试类，跳过 PITest"
-          fi
+          echo "=== 运行单元测试 ==="
+          mvn test -B
+          echo "测试完成"
 
       - name: Generate JaCoCo report
         run: |
+          echo "=== 生成 JaCoCo 报告 ==="
           mvn jacoco:report -B
           echo "✅ JaCoCo 报告生成完成"
+          echo "报告位置: target/site/jacoco/index.html"
 
       - name: Upload JaCoCo coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
           files: ./target/site/jacoco/jacoco.xml
           fail_ci_if_error: false
+          verbose: true
+
+      - name: Prepare for mutation testing
+        run: |
+          echo "=== 准备变异测试 ==="
+          # 确保测试类存在
+          echo "查找测试类:"
+          find . -path "*/src/test/java/*" -name "*Test.java" -o -name "*Tests.java" | head -20
+          echo "查找目标类:"
+          find . -path "*/src/main/java/*" -name "*.java" | head -20
+          
+          # 检查测试覆盖率
+          if [ -f "target/site/jacoco/jacoco.xml" ]; then
+            echo "覆盖率文件存在"
+            covered_lines=$(grep -c "LINE" target/site/jacoco/jacoco.xml || echo "0")
+            echo "覆盖行数: $covered_lines"
+          fi
+
+      - name: Run PITest mutation analysis
+        run: |
+          echo "=== 运行变异测试 ==="
+          echo "开始时间: $(date)"
+          
+          # 运行 PITest
+          mvn pitest:mutationCoverage \
+            -Dverbose=true \
+            -Dthreads=4 \
+            -DtimestampedReports=false \
+            -DoutputFormats=HTML,XML \
+            -DreportsDirectory=target/pit-reports \
+            -DfailWhenNoMutations=false \
+            -DskipFailingTests=false
+          
+          echo "结束时间: $(date)"
+          
+          # 检查结果
+          if [ -d "target/pit-reports" ]; then
+            echo "✅ PITest 报告生成成功"
+            echo "报告内容:"
+            ls -la target/pit-reports/
+          
+            # 显示摘要
+            if [ -f "target/pit-reports/mutations.xml" ]; then
+              echo "=== 变异测试摘要 ==="
+              grep -o "mutationScore='[0-9.]*'" target/pit-reports/mutations.xml || echo "未找到变异分数"
+              grep -o "totalMutations='[0-9]*'" target/pit-reports/mutations.xml || echo "未找到变异总数"
+              grep -o "mutationsKilled='[0-9]*'" target/pit-reports/mutations.xml || echo "未找到被杀死的变异"
+            fi
+          else
+            echo "⚠️ PITest 报告未生成"
+          fi
 
       - name: Upload PITest reports
-        if: always()  # 即使测试失败也上传
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: pitest-mutation-reports
-          path: target/pit-reports/
+          path: |
+            target/pit-reports/
+            !target/pit-reports/**/*.css
+            !target/pit-reports/**/*.js
           retention-days: 30
-          if-no-files-found: ignore  # 如果没有文件则忽略
+          if-no-files-found: warn
 
-      - name: Upload test coverage reports
+      - name: Upload JaCoCo reports
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-coverage-reports
           path: target/site/jacoco/
           retention-days: 30
-          if-no-files-found: ignore
+          if-no-files-found: warn
 
-      - name: Show build summary
+      - name: Display final summary
         if: always()
         run: |
           echo "=== 构建总结 ==="
           echo "工作目录: $(pwd)"
-          echo "目录内容:"
-          ls -la
-          echo "目标目录内容:"
-          ls -la target/ || echo "目标目录不存在"
-          echo "测试输出:"
-          [ -f "test-output.txt" ] && tail -50 test-output.txt || echo "测试输出文件不存在"
-          echo "通过的测试:"
-          [ -f "passed-tests.txt" ] && cat passed-tests.txt || echo "通过的测试文件不存在"
+          echo "最终状态:"
+          
+          # 检查测试结果
+          if [ -f "target/surefire-reports" ]; then
+            echo "✅ 单元测试报告存在"
+          fi
+          
+          # 检查覆盖率报告
+          if [ -f "target/site/jacoco/index.html" ]; then
+            echo "✅ JaCoCo 覆盖率报告存在"
+          fi
+          
+          # 检查变异测试报告
+          if [ -f "target/pit-reports/index.html" ]; then
+            echo "✅ PITest 变异测试报告存在"
+            echo "查看变异测试报告:"
+            echo "1. 下载 pitest-mutation-reports 制品"
+            echo "2. 打开 index.html 查看详细结果"
+          else
+            echo "⚠️ PITest 变异测试报告不存在"
+          fi
+          
+          echo "=== 构建完成 ==="
