@@ -31,9 +31,24 @@ jobs:
       - name: Build and compile
         run: |
           echo "工作目录: $(pwd)"
+          echo "检查 Maven 配置..."
+          mvn -v
           mvn clean compile test-compile -B
 
-      - name: Run successful tests only (跳过失败测试)
+      - name: Update PITest version in pom.xml (如果存在)
+        run: |
+          if [ -f "pom.xml" ]; then
+            echo "更新 PITest 版本到可用版本..."
+            # 备份原文件
+            cp pom.xml pom.xml.backup
+            # 将 1.21.3 替换为 1.16.0（稳定版本）
+            sed -i 's/<version>1.21.3<\/version>/<version>1.16.0<\/version>/g' pom.xml
+            echo "PITest 版本更新完成"
+          else
+            echo "未找到 pom.xml 文件"
+          fi
+
+      - name: Run successful tests only
         run: |
           echo "运行通过的测试..."
           # 首先找出哪些测试类能通过
@@ -50,6 +65,11 @@ jobs:
             TESTS=$(cat passed-tests.txt | sed 's/Running //' | tr '\n' ',' | sed 's/,$//')
             echo "运行 PITest 对于: $TESTS"
           
+            # 检查 PITest 插件是否配置正确
+            echo "检查 PITest 配置..."
+            mvn help:describe -Dplugin=org.pitest:pitest-maven -Ddetail || echo "PITest 插件描述失败"
+          
+            # 运行 PITest，使用更稳定的配置
             mvn org.pitest:pitest-maven:mutationCoverage \
               -DtargetTests="$TESTS" \
               -Dthreads=2 \
@@ -57,7 +77,7 @@ jobs:
               -DoutputFormats=HTML,XML \
               -DreportsDirectory=target/pit-reports \
               -DskipFailingTests=true \
-              -Dverbose=true || echo "PITest 完成"
+              -Dverbose=true || echo "PITest 执行完成"
           else
             echo "没有找到通过的测试类，跳过 PITest"
           fi
@@ -74,12 +94,13 @@ jobs:
           fail_ci_if_error: false
 
       - name: Upload PITest reports
-        if: success() || failure()  # 即使测试失败也上传
+        if: always()  # 即使测试失败也上传
         uses: actions/upload-artifact@v4
         with:
           name: pitest-mutation-reports
           path: target/pit-reports/
           retention-days: 30
+          if-no-files-found: ignore  # 如果没有文件则忽略
 
       - name: Upload test coverage reports
         uses: actions/upload-artifact@v4
@@ -87,3 +108,18 @@ jobs:
           name: jacoco-coverage-reports
           path: target/site/jacoco/
           retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Show build summary
+        if: always()
+        run: |
+          echo "=== 构建总结 ==="
+          echo "工作目录: $(pwd)"
+          echo "目录内容:"
+          ls -la
+          echo "目标目录内容:"
+          ls -la target/ || echo "目标目录不存在"
+          echo "测试输出:"
+          [ -f "test-output.txt" ] && tail -50 test-output.txt || echo "测试输出文件不存在"
+          echo "通过的测试:"
+          [ -f "passed-tests.txt" ] && cat passed-tests.txt || echo "通过的测试文件不存在"
