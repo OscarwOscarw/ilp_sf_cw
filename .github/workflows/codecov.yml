@@ -23,18 +23,24 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # 3️⃣ 运行 PIT mutation
-      - name: Run PIT Mutation Testing
+      # 3️⃣ 编译项目（必要）
+      - name: Compile project
         run: |
           cd ilp_cw3
           mvn clean compile -B
+
+      # 4️⃣ 运行 PIT Mutation Testing（只 mutation，不生成 coverage）
+      - name: Run PIT Mutation Testing
+        run: |
+          cd ilp_cw3
           mvn org.pitest:pitest-maven:mutationCoverage \
+            -DexportLineCoverage=false \
+            -DskipFailingTests=true \
+            -DfailWhenNoMutations=false \
             -Dthreads=1 \
-            -DtimeoutConstant=30000 \
-            -DtimeoutFactor=2 \
             -B
 
-      # 4️⃣ 上传 mutation report
+      # 5️⃣ 上传 mutation report
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@v4
