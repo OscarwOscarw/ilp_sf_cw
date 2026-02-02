@@ -108,12 +108,13 @@
                 <artifactId>pitest-maven</artifactId>
                 <version>${pitest.version}</version>
                 <configuration>
+                    <!-- 目标类：要突变的业务代码 -->
                     <targetClasses>
                         <param>ilp_cw1.ilp_cw1_rset.*</param>
                     </targetClasses>
+                    <!-- 目标测试：自动匹配所有测试类 -->
                     <targetTests>
-                        <param>ilp_cw1.ilp_cw1_rset.*Test</param>
-                        <param>ilp_cw1.ilp_cw1_rset.*Tests</param>
+                        <param>ilp_cw1.ilp_cw1_rset.*</param>
                     </targetTests>
                     <excludedClasses>
                         <param>ilp_cw1.ilp_cw1_rset.config.*</param>
@@ -149,6 +150,15 @@
                         <version>1.2.1</version>
                     </dependency>
                 </dependencies>
+                <executions>
+                    <execution>
+                        <id>mutation-test</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>mutationCoverage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

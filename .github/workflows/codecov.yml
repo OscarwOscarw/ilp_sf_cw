@@ -23,13 +23,13 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # 3️⃣ 直接运行 PIT mutation
+      # 3️⃣ 运行 PIT mutation
       - name: Run PIT Mutation Testing
         run: |
           cd ilp_cw3
-          mvn org.pitest:pitest-maven:mutationCoverage
+          mvn clean org.pitest:pitest-maven:mutationCoverage
 
-      # 4️⃣ 上传 mutation 报告
+      # 4️⃣ 上传 mutation report
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@v4
