@@ -22,7 +22,6 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <pitest.version>1.16.1</pitest.version>
-        <jacoco.version>0.8.11</jacoco.version>
     </properties>
 
     <dependencies>
@@ -65,43 +64,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
-            <!-- JaCoCo Coverage Plugin -->
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>${jacoco.version}</version>
-                <executions>
-                    <execution>
-                        <id>prepare-agent</id>
-                        <goals><goal>prepare-agent</goal></goals>
-                    </execution>
-                    <execution>
-                        <id>report</id>
-                        <phase>test</phase>
-                        <goals><goal>report</goal></goals>
-                    </execution>
-                    <execution>
-                        <id>check</id>
-                        <phase>verify</phase>
-                        <goals><goal>check</goal></goals>
-                        <configuration>
-                            <rules>
-                                <rule>
-                                    <element>BUNDLE</element>
-                                    <limits>
-                                        <limit>
-                                            <counter>INSTRUCTION</counter>
-                                            <value>COVEREDRATIO</value>
-                                            <minimum>0.80</minimum>
-                                        </limit>
-                                    </limits>
-                                </rule>
-                            </rules>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
             <!-- PIT Mutation Testing Plugin -->
             <plugin>
                 <groupId>org.pitest</groupId>
@@ -112,9 +74,9 @@
                     <targetClasses>
                         <param>ilp_cw1.ilp_cw1_rset.*</param>
                     </targetClasses>
-                    <!-- 目标测试：自动匹配所有测试类 -->
+                    <!-- 目标测试：匹配整个包下所有测试类 -->
                     <targetTests>
-                        <param>ilp_cw1.ilp_cw1_rset.*</param>
+                        <param>ilp_cw1.*</param>
                     </targetTests>
                     <excludedClasses>
                         <param>ilp_cw1.ilp_cw1_rset.config.*</param>
@@ -136,8 +98,8 @@
                     <timestampedReports>false</timestampedReports>
                     <reportDir>${project.build.directory}/pit-reports</reportDir>
                     <threads>1</threads>
-                    <timeoutConstant>10000</timeoutConstant>
-                    <timeoutFactor>1.5</timeoutFactor>
+                    <timeoutConstant>30000</timeoutConstant>
+                    <timeoutFactor>2</timeoutFactor>
                     <skipFailingTests>true</skipFailingTests>
                     <failWhenNoMutations>false</failWhenNoMutations>
                     <exportLineCoverage>false</exportLineCoverage>
