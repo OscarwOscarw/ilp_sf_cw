@@ -2,41 +2,43 @@ name: PIT Mutation Testing
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
+    branches: [ main ]
 
 jobs:
   mutation-test:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout 项目代码
+      # 1️⃣ 拉取代码
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. 设置 Java 21
-      - name: Set up Java 21
-        uses: actions/setup-java@v3
+      # 2️⃣ 设置 Java 21
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '21'
-          distribution: 'temurin'
           cache: maven
 
-      # 3. 编译项目（只编译，不运行测试）
-      - name: Compile project
-        run: |
-          mvn clean compile -B
-
-      # 4. 运行 PIT mutation 测试
+      # 3️⃣ 运行 PIT mutation
       - name: Run PIT Mutation Testing
         run: |
-          mvn org.pitest:pitest-maven:mutationCoverage -B
+          cd ilp_cw3
+          mvn clean compile -B
+          mvn org.pitest:pitest-maven:mutationCoverage \
+            -Dthreads=1 \
+            -DtimeoutConstant=30000 \
+            -DtimeoutFactor=2 \
+            -B
 
-      # 5. 上传 mutation 报告
+      # 4️⃣ 上传 mutation report
       - name: Upload mutation report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: mutation-reports
-          path: target/pit-reports/
+          path: ilp_cw3/target/pit-reports/
           retention-days: 30
