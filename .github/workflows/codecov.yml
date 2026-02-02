@@ -1,170 +1,62 @@
-name: Mutation Testing with Test Failure Handling
+name: Mutation Testing (Stable)
+
 on: [push, pull_request]
 
 jobs:
   mutation-test:
-    runs-on: ubuntu-latest-8core
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
+          distribution: temurin
           java-version: '17'
-          distribution: 'temurin'
           cache: maven
 
       - name: Configure project for Java 17
         run: |
           cd ilp_cw3
-          
-          # Backup the original pom.xml
-          cp pom.xml pom.xml.backup
-          
-          # Update Java version to 17
-          echo "Updating Java version to 17..."
-          sed -i 's/<java.version>21<\/java.version>/<java.version>17<\/java.version>/' pom.xml
-          sed -i 's/<maven.compiler.source>21<\/maven.compiler.source>/<maven.compiler.source>17<\/maven.compiler.source>/' pom.xml
-          sed -i 's/<maven.compiler.target>21<\/maven.compiler.target>/<maven.compiler.target>17<\/maven.compiler.target>/' pom.xml
-          
-          # Update PITest version
-          echo "Updating PITest version..."
-          sed -i 's/<version>1.21.3<\/version>/<version>1.15.0<\/version>/' pom.xml
+          echo "Switching project to Java 17"
 
-      - name: Compile project
+          sed -i 's/<java.version>21<\/java.version>/<java.version>17<\/java.version>/' pom.xml || true
+          sed -i 's/<maven.compiler.source>21<\/maven.compiler.source>/<maven.compiler.source>17<\/maven.compiler.source>/' pom.xml || true
+          sed -i 's/<maven.compiler.target>21<\/maven.compiler.target>/<maven.compiler.target>17<\/maven.compiler.target>/' pom.xml || true
+
+          # Use a PIT version known to be stable with Java 17
+          sed -i 's/<artifactId>pitest-maven<\/artifactId>[\s\S]*?<version>.*<\/version>/<artifactId>pitest-maven<\/artifactId>\n      <version>1.16.1<\/version>/' pom.xml || true
+
+      - name: Compile and run tests
         run: |
           cd ilp_cw3
-          echo "Compiling project..."
-          mvn clean compile test-compile -B
-          echo "✅ Compilation completed"
+          mvn clean test -B
 
-      - name: Run tests and capture results
-        id: run-tests
-        continue-on-error: true  # Continue even if tests fail
+      - name: Run PITest (Mutation Testing)
         run: |
           cd ilp_cw3
-          echo "Running tests (allow failures)..."
-          
-          # Run tests, allowing failures
-          mvn test -B > test-output.txt 2>&1 || true
-          
-          # Analyze test results
-          echo "=== Test Results Analysis ==="
-          
-          # Extract passing test classes
-          echo "Extracting passing test classes..."
-          grep -o "Running ilp_cw1\.ilp_cw1_rset\.[A-Za-z]*Test" test-output.txt | sort -u > passed-tests.txt 2>/dev/null || true
-          grep -o "Running ilp_cw1\.ilp_cw1_rset\.[A-Za-z]*Tests" test-output.txt | sort -u >> passed-tests.txt 2>/dev/null || true
-          
-          # Extract failing tests
-          grep -A2 "FAILURES" test-output.txt | grep "Test\|Tests" | sed 's/\[ERROR\]//g' | sed 's/^[[:space:]]*//' > failed-tests.txt 2>/dev/null || true
-          
-          # Summarize results
-          total_tests=$(grep -o "Tests run: [0-9]*" test-output.txt | tail -1 | grep -o "[0-9]*" || echo "0")
-          failed_tests=$(grep -o "Failures: [0-9]*" test-output.txt | tail -1 | grep -o "[0-9]*" || echo "0")
-          
-          echo "Total tests: $total_tests"
-          echo "Failures: $failed_tests"
-          
-          if [ -s "passed-tests.txt" ]; then
-            passed_count=$(wc -l < passed-tests.txt)
-            echo "Number of passing test classes: $passed_count"
-            echo "Passing test classes:"
-            cat passed-tests.txt
-          else
-            echo "No passing test classes found"
-          fi
-          
-          if [ -s "failed-tests.txt" ]; then
-            echo "Failing tests:"
-            cat failed-tests.txt
-          fi
-          
-          # Set output variables
-          if [ "$passed_count" -gt "0" ]; then
-            echo "has_passing_tests=true" >> $GITHUB_OUTPUT
-            TESTS=$(cat passed-tests.txt | sed 's/Running //' | tr '\n' ',' | sed 's/,$//')
-            echo "tests_to_run=$TESTS" >> $GITHUB_OUTPUT
-          else
-            echo "has_passing_tests=false" >> $GITHUB_OUTPUT
-            echo "tests_to_run=" >> $GITHUB_OUTPUT
-          fi
+          echo "Running PIT mutation testing..."
 
-      - name: Run PITest on passing tests only
-        if: steps.run-tests.outputs.has_passing_tests == 'true'
-        run: |
-          cd ilp_cw3
-          
-          echo "=== Running Mutation Testing ==="
-          echo "Target tests: ${{ steps.run-tests.outputs.tests_to_run }}"
-          echo "Start time: $(date)"
-          
-          # Run PITest on passing tests only
           mvn org.pitest:pitest-maven:mutationCoverage \
-            -DtargetTests="${{ steps.run-tests.outputs.tests_to_run }}" \
-            -Dverbose=true \
-            -Dthreads=4 \
+            -DtargetTests="ilp_cw1\.ilp_cw1_rset\..*Test" \
+            -Dthreads=1 \
+            -DjvmArgs="-Xmx1G" \
+            -DtimeoutConstant=10000 \
+            -DtimeoutFactor=1.5 \
+            -DskipFailingTests=true \
+            -DfailWhenNoMutations=false \
             -DtimestampedReports=false \
             -DoutputFormats=HTML,XML \
-            -DskipFailingTests=true \
-            -DfailWhenNoMutations=false \
-            -DmaxMutationsPerClass=100 \
-            -DtimeoutConstant=10000 \
-            -DtimeoutFactor=1.5
-          
-          echo "End time: $(date)"
-          
-          # Check results
-          if [ -d "target/pit-reports" ]; then
-            echo "✅ PITest report generated successfully"
-          
-            # Display summary
-            if [ -f "target/pit-reports/mutations.xml" ]; then
-              echo "=== Mutation Testing Summary ==="
-              total=$(grep -o "totalMutations='[0-9]*'" target/pit-reports/mutations.xml | head -1 | grep -o "[0-9]*" || echo "0")
-              killed=$(grep -o "mutationsKilled='[0-9]*'" target/pit-reports/mutations.xml | head -1 | grep -o "[0-9]*" || echo "0")
-          
-              echo "Total mutations: $total"
-              echo "Mutations killed: $killed"
-          
-              if [ "$total" -gt "0" ]; then
-                percentage=$((killed * 100 / total))
-                echo "Mutation score: $percentage%"
-                echo "mutation_score=$percentage" >> $GITHUB_OUTPUT
-              else
-                echo "No mutations generated"
-              fi
-            fi
-          else
-            echo "⚠️ PITest report not generated"
-          fi
-
-      - name: Run PITest on all tests (fallback)
-        if: steps.run-tests.outputs.has_passing_tests != 'true'
-        run: |
-          cd ilp_cw3
-          echo "=== No passing tests found, running PITest on all tests ==="
-          
-          mvn org.pitest:pitest-maven:mutationCoverage \
-            -DskipFailingTests=true \
-            -DfailWhenNoMutations=false \
-            -Dverbose=true \
-            -Dthreads=2
-          
-          echo "Fallback PITest completed"
+            -Dverbose=true
 
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-reports
-          path: |
-            ilp_cw3/target/surefire-reports/
-            ilp_cw3/test-output.txt
-            ilp_cw3/passed-tests.txt
-            ilp_cw3/failed-tests.txt
+          path: ilp_cw3/target/surefire-reports/
           retention-days: 7
 
       - name: Upload mutation reports
@@ -174,24 +66,3 @@ jobs:
           name: mutation-reports
           path: ilp_cw3/target/pit-reports/
           retention-days: 30
-
-      - name: Final summary
-        if: always()
-        run: |
-          echo "=== Build Summary ==="
-          echo "Test status:"
-          echo "- Total tests: ${{ steps.run-tests.outputs.total_tests || 'N/A' }}"
-          echo "- Failures: ${{ steps.run-tests.outputs.failed_tests || 'N/A' }}"
-          echo "- Passing test classes: ${{ steps.run-tests.outputs.passed_count || '0' }}"
-          
-          if [ -f "ilp_cw3/target/pit-reports/index.html" ]; then
-            echo "✅ Mutation testing report generated"
-            echo "Download 'mutation-reports' artifact for details"
-          else
-            echo "⚠️ Mutation testing report not generated"
-          fi
-          
-          if [ -d "ilp_cw3/target/surefire-reports" ]; then
-            echo "📊 Test reports generated"
-            echo "Download 'test-reports' artifact to see test details"
-          fi
