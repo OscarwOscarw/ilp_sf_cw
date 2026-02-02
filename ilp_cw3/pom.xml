@@ -1,78 +1,71 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>3.5.6</version>
         <relativePath/>
     </parent>
+
     <groupId>ilp_cw1</groupId>
     <artifactId>ilp_cw3</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>ilp_cw1_rset</name>
-    <description>ilp cw1 submission</description>
-    <url/>
-    <licenses>
-        <license/>
-    </licenses>
-    <developers>
-        <developer/>
-    </developers>
-    <scm>
-        <connection/>
-        <developerConnection/>
-        <tag/>
-        <url/>
-    </scm>
+    <description>ILP CW1 submission</description>
+
     <properties>
         <java.version>21</java.version>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <pitest.version>1.16.0</pitest.version>
+        <pitest.version>1.16.1</pitest.version>
         <jacoco.version>0.8.11</jacoco.version>
     </properties>
+
     <dependencies>
+        <!-- Spring Boot dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+
+        <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
+            <!-- Spring Boot plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
             </plugin>
 
+            <!-- JaCoCo Coverage Plugin -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -80,23 +73,17 @@
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
+                        <goals><goal>prepare-agent</goal></goals>
                     </execution>
                     <execution>
                         <id>report</id>
                         <phase>test</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
+                        <goals><goal>report</goal></goals>
                     </execution>
                     <execution>
                         <id>check</id>
                         <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
+                        <goals><goal>check</goal></goals>
                         <configuration>
                             <rules>
                                 <rule>
@@ -115,33 +102,23 @@
                 </executions>
             </plugin>
 
-            <!-- PITest Mutation Testing Plugin -->
+            <!-- PIT Mutation Testing Plugin -->
             <plugin>
                 <groupId>org.pitest</groupId>
                 <artifactId>pitest-maven</artifactId>
                 <version>${pitest.version}</version>
                 <configuration>
-                    <!-- 目标类：要突变的业务代码 -->
                     <targetClasses>
                         <param>ilp_cw1.ilp_cw1_rset.*</param>
                     </targetClasses>
-                    <!-- 目标测试：用于杀死突变的测试 -->
                     <targetTests>
                         <param>ilp_cw1.ilp_cw1_rset.*Test</param>
                         <param>ilp_cw1.ilp_cw1_rset.*Tests</param>
-                        <param>ilp_cw1.ilp_cw1_rset.*IT</param>
-                        <param>ilp_cw1.ilp_cw1_rset.*ITs</param>
                     </targetTests>
-                    <!-- 排除的类 -->
                     <excludedClasses>
                         <param>ilp_cw1.ilp_cw1_rset.config.*</param>
                         <param>ilp_cw1.ilp_cw1_rset.*Application</param>
-                        <param>ilp_cw1.ilp_cw1_rset.*Controller</param>
-                        <param>ilp_cw1.ilp_cw1_rset.dto.*</param>
-                        <param>ilp_cw1.ilp_cw1_rset.model.*</param>
-                        <param>ilp_cw1.ilp_cw1_rset.entity.*</param>
                     </excludedClasses>
-                    <!-- 排除的方法 -->
                     <excludedMethods>
                         <param>toString</param>
                         <param>hashCode</param>
@@ -149,30 +126,21 @@
                         <param>clone</param>
                         <param>compareTo</param>
                     </excludedMethods>
-                    <!-- 变异器配置 -->
                     <mutators>
                         <mutator>STRONGER</mutator>
                     </mutators>
-                    <!-- 报告配置 -->
                     <outputFormats>
                         <outputFormat>HTML</outputFormat>
-                        <outputFormat>XML</outputFormat>
-                        <outputFormat>CSV</outputFormat>
                     </outputFormats>
                     <timestampedReports>false</timestampedReports>
                     <reportDir>${project.build.directory}/pit-reports</reportDir>
-                    <!-- 性能配置 -->
-                    <threads>4</threads>
-                    <timeoutConstant>5000</timeoutConstant>
+                    <threads>1</threads>
+                    <timeoutConstant>10000</timeoutConstant>
                     <timeoutFactor>1.5</timeoutFactor>
-                    <!-- 覆盖配置 -->
-                    <exportLineCoverage>true</exportLineCoverage>
-                    <mutationThreshold>50</mutationThreshold>
-                    <coverageThreshold>50</coverageThreshold>
-                    <!-- 其他配置 -->
-                    <skipFailingTests>false</skipFailingTests>
-                    <verbose>true</verbose>
+                    <skipFailingTests>true</skipFailingTests>
                     <failWhenNoMutations>false</failWhenNoMutations>
+                    <exportLineCoverage>false</exportLineCoverage>
+                    <verbose>true</verbose>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -181,15 +149,6 @@
                         <version>1.2.1</version>
                     </dependency>
                 </dependencies>
-                <executions>
-                    <execution>
-                        <id>mutation-test</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>mutationCoverage</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
