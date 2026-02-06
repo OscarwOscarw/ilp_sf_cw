@@ -22,8 +22,7 @@ Through a comprehensive audit of the test plan, execution process, and results, 
 - No security validation was performed, including:
     - API authentication and authorization testing.
     - Input sanitization and injection attack prevention (e.g., SQL or JSON injection).
-    - Verification of encryption for sensitive data (coordinates, task details) in transit and at rest.
-
+    - Verification of encryption for sensitive data (coordinates, task details) in transit and at rest
 ### High Integration Test Environmental Dependency
 
 - Some integration tests (e.g., `DataRetrievalIntegrationTest`) depend on external API availability, making results affected by network and service status and non-repeatable.
